@@ -26,9 +26,16 @@ from geopolitical_events import GeopoliticalEventsSource
 app = FastAPI(title="Geopolitical Market Game API", version="1.0.0")
 
 # Enable CORS for React frontend
+# In Docker, frontend is served from nginx on port 80
+import os
+cors_origins = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://localhost:5173,http://localhost:80,http://localhost"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React dev servers
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
