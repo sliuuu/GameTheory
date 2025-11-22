@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Data cache
+.market_data_cache/
+*.pkl
+*.pickle
+*.csv
+*.parquet
+
+# Logs
+*.log
+backend.log
+frontend.log
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node modules (frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+
