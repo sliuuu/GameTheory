@@ -37,6 +37,8 @@ A sophisticated web application that applies game theory to analyze geopolitical
 
 ### Option 1: Docker Deployment (Recommended)
 
+The easiest way to run the application is using Docker. All persistent data (cache, logs, outputs) is automatically managed.
+
 **Production:**
 ```bash
 # Build and start all services
@@ -219,6 +221,23 @@ GameTheory/
 - `DELETE /api/cache` - Clear cache
 
 See full API documentation at http://localhost:8001/docs
+
+## 💾 Persistent Storage
+
+The application uses persistent volumes for all data that requires durability:
+
+- **Market Data Cache** (`.market_data_cache/`) - Cached yfinance market data
+- **Logs** (`data/logs/`) - Application and web server logs
+- **Model Outputs** (`data/outputs/`) - Generated plots and analysis results
+- **Application State** (`data/state/`) - Job state and session data
+- **API History** (`data/api_history/`) - Request/response logs for analytics
+
+All data persists across container restarts. Initialize volumes with:
+```bash
+bash scripts/init_volumes.sh
+# or
+make init-volumes
+```
 
 ## 📦 Dependencies
 

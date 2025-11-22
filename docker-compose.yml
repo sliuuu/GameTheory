@@ -57,6 +57,5 @@ networks:
   game-theory-network:
     driver: bridge
 
-volumes:
-  # Note: Using named volumes for better portability
-  # For bind mounts, volumes are defined inline in the service definition above
+# Note: Using bind mounts directly in service definitions for better portability
+# No named volumes needed - all volumes are bind-mounted from host filesystem

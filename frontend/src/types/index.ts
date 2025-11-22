@@ -8,6 +8,12 @@ export interface MarketData {
   USDJPY: number;
   Gold: number;
   VIX: number;
+  SP500?: number;
+  Nikkei225?: number;
+  DAX?: number;
+  TAIEX?: number;
+  HangSeng?: number;
+  [key: string]: number | undefined; // Index signature for dynamic access
 }
 
 export interface Strategy {

@@ -1,7 +1,8 @@
 import MarketOverviewCard from './MarketOverviewCard';
+import { MarketData } from '../../types';
 
 interface FinancialIndicesProps {
-  marketContext: Record<string, number>;
+  marketContext: MarketData;
 }
 
 const FinancialIndices = ({ marketContext }: FinancialIndicesProps) => {
