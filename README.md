@@ -273,9 +273,40 @@ This project is open source and available under the MIT License.
 - News sources: Reuters, Bloomberg, Financial Times
 - Built with FastAPI, React, and modern web technologies
 
+## 🐳 Docker Commands
+
+```bash
+# Start the application
+docker-compose up -d
+
+# Stop the application
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# Rebuild after code changes
+docker-compose build
+docker-compose up -d
+
+# Or use Makefile shortcuts
+make prod      # Build and start production
+make dev       # Start development mode
+make logs      # View logs
+make down      # Stop services
+make backup    # Backup all persistent data
+```
+
+See [DOCKER.md](DOCKER.md) for detailed Docker documentation.
+
 ## 📧 Contact
 
 For questions or issues, please open an issue on GitHub.
+
+## 🔗 Repository
+
+- **GitHub**: https://github.com/sliuuu/GameTheory
+- **Issues**: https://github.com/sliuuu/GameTheory/issues
 
 ---
 
