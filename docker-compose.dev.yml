@@ -17,12 +17,13 @@ services:
     volumes:
       # Mount code for hot reload
       - ./:/app
-      # Persistent volumes for all data
-      - market_data_cache:/app/data/cache
-      - backend_logs:/app/data/logs
-      - model_outputs:/app/data/outputs
-      - app_state:/app/data/state
-      - api_history:/app/data/api_history
+      # Persistent volumes for all data (bind mounts for host access)
+      # Note: These override the code mount for these specific paths
+      - ./.market_data_cache:/app/data/cache
+      - ./data/logs:/app/data/logs
+      - ./data/outputs:/app/data/outputs
+      - ./data/state:/app/data/state
+      - ./data/api_history:/app/data/api_history
     restart: unless-stopped
     command: ["uvicorn", "api_backend:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
     networks:
@@ -41,8 +42,8 @@ services:
       # Mount code for hot reload
       - ./frontend:/app
       - /app/node_modules
-      # Frontend logs
-      - frontend_logs:/app/logs
+      # Frontend logs (bind mount for host access)
+      - ./data/logs/frontend:/app/logs
     depends_on:
       - backend
     restart: unless-stopped
@@ -54,50 +55,4 @@ networks:
     driver: bridge
 
 volumes:
-  # Market data cache - stores cached yfinance data
-  market_data_cache:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/.market_data_cache
-  
-  # Backend logs - application logs
-  backend_logs:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/data/logs
-  
-  # Model outputs - generated plots, images, reports
-  model_outputs:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/data/outputs
-  
-  # Application state - job state, session data, etc.
-  app_state:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/data/state
-  
-  # API history - request/response logs, analytics
-  api_history:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/data/api_history
-  
-  # Frontend logs - nginx access/error logs
-  frontend_logs:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/data/logs/frontend
+  # Note: Using bind mounts directly in service definitions for better portability
