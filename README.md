@@ -32,11 +32,42 @@ A sophisticated web application that applies game theory to analyze geopolitical
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.9+
-- Node.js 18+ and npm
-- Git
+- **For Docker**: Docker Engine 20.10+ and Docker Compose 2.0+
+- **For Local Dev**: Python 3.9+ and Node.js 18+
 
-### Installation
+### Option 1: Docker Deployment (Recommended)
+
+**Production:**
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
+
+**Development:**
+```bash
+# Start with hot reload
+docker-compose -f docker-compose.dev.yml up
+```
+
+**Using Makefile:**
+```bash
+make prod        # Production build and start
+make dev         # Development mode
+make logs        # View logs
+make down        # Stop services
+```
+
+Access the application:
+- **Frontend**: http://localhost (production) or http://localhost:5173 (dev)
+- **Backend API**: http://localhost:8001
+- **API Documentation**: http://localhost:8001/docs
+
+See [DOCKER.md](DOCKER.md) for detailed Docker instructions.
+
+### Option 2: Local Development
 
 1. **Clone the repository**
    ```bash
@@ -56,30 +87,30 @@ A sophisticated web application that applies game theory to analyze geopolitical
    cd ..
    ```
 
-### Running the Application
+4. **Run the application**
 
-**Option 1: Use the startup script (Recommended)**
-```bash
-bash START_SERVERS.sh
-```
+   **Option A: Use the startup script**
+   ```bash
+   bash START_SERVERS.sh
+   ```
 
-**Option 2: Manual startup**
+   **Option B: Manual startup**
 
-Terminal 1 - Backend:
-```bash
-python3 -m uvicorn api_backend:app --host 0.0.0.0 --port 8001 --reload
-```
+   Terminal 1 - Backend:
+   ```bash
+   python3 -m uvicorn api_backend:app --host 0.0.0.0 --port 8001 --reload
+   ```
 
-Terminal 2 - Frontend:
-```bash
-cd frontend
-npm run dev
-```
+   Terminal 2 - Frontend:
+   ```bash
+   cd frontend
+   npm run dev
+   ```
 
-### Access the Application
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8001
-- **API Documentation**: http://localhost:8001/docs
+5. **Access the Application**
+   - **Frontend**: http://localhost:5173
+   - **Backend API**: http://localhost:8001
+   - **API Documentation**: http://localhost:8001/docs
 
 ## 📊 How It Works
 
