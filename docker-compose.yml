@@ -10,11 +10,17 @@ services:
       - "8001:8001"
     environment:
       - PYTHONUNBUFFERED=1
+      - CACHE_DIR=/app/data/cache
+      - LOG_DIR=/app/data/logs
+      - OUTPUT_DIR=/app/data/outputs
+      - STATE_DIR=/app/data/state
     volumes:
-      # Mount cache directory for persistence
-      - ./.market_data_cache:/app/.market_data_cache
-      # Mount code for development (comment out for production)
-      # - ./:/app
+      # Persistent volumes for all data
+      - market_data_cache:/app/data/cache
+      - backend_logs:/app/data/logs
+      - model_outputs:/app/data/outputs
+      - app_state:/app/data/state
+      - api_history:/app/data/api_history
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/')"]
@@ -34,6 +40,9 @@ services:
       - "80:80"
     depends_on:
       - backend
+    volumes:
+      # Frontend logs
+      - frontend_logs:/var/log/nginx
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
@@ -49,6 +58,50 @@ networks:
     driver: bridge
 
 volumes:
+  # Market data cache - stores cached yfinance data
   market_data_cache:
     driver: local
-
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/.market_data_cache
+  
+  # Backend logs - application logs
+  backend_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/logs
+  
+  # Model outputs - generated plots, images, reports
+  model_outputs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/outputs
+  
+  # Application state - job state, session data, etc.
+  app_state:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/state
+  
+  # API history - request/response logs, analytics
+  api_history:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/api_history
+  
+  # Frontend logs - nginx access/error logs
+  frontend_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/logs/frontend

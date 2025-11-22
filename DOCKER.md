@@ -88,8 +88,67 @@ FRONTEND_PORT=80
 
 ## Volumes
 
-- **Cache Volume**: Market data cache is persisted in `.market_data_cache/` directory
-- **Development Volumes**: Source code is mounted for hot reload in dev mode
+The application uses persistent volumes for all data that requires durability:
+
+### Persistent Volumes
+
+1. **Market Data Cache** (`market_data_cache`)
+   - Location: `.market_data_cache/`
+   - Stores: Cached yfinance market data (pickle files)
+   - Purpose: Speed up repeated data fetches, reduce API calls
+
+2. **Backend Logs** (`backend_logs`)
+   - Location: `data/logs/`
+   - Stores: Application logs, error logs
+   - Purpose: Debugging, monitoring, audit trail
+
+3. **Model Outputs** (`model_outputs`)
+   - Location: `data/outputs/`
+   - Stores: Generated plots (backtest_accuracy.png, sensitivity_analysis_*.png)
+   - Purpose: Persist analysis results, visualizations
+
+4. **Application State** (`app_state`)
+   - Location: `data/state/`
+   - Stores: Job state, session data, temporary state files
+   - Purpose: Maintain state across container restarts
+
+5. **API History** (`api_history`)
+   - Location: `data/api_history/`
+   - Stores: Request/response logs, API analytics (JSONL format)
+   - Purpose: Track API usage, analytics, debugging
+
+6. **Frontend Logs** (`frontend_logs`)
+   - Location: `data/logs/frontend/`
+   - Stores: Nginx access/error logs
+   - Purpose: Web server logging, access analytics
+
+### Initializing Volumes
+
+Before first run, initialize the directories:
+
+```bash
+bash scripts/init_volumes.sh
+```
+
+Or manually:
+
+```bash
+mkdir -p data/{logs/{backend,frontend},outputs,state,api_history}
+mkdir -p .market_data_cache
+```
+
+### Volume Backup
+
+To backup all persistent data:
+
+```bash
+tar -czf backup-$(date +%Y%m%d).tar.gz data/ .market_data_cache/
+```
+
+### Development Volumes
+
+- Source code is mounted for hot reload in dev mode
+- Data volumes remain persistent across dev/prod
 
 ## Health Checks
 

@@ -19,6 +19,10 @@ build/
 *.csv
 *.parquet
 
+# Persistent data directories (Docker volumes)
+data/
+!data/.gitkeep
+
 # Logs
 *.log
 backend.log
@@ -53,4 +57,3 @@ htmlcov/
 *.tmp
 *.bak
 *.cache
-

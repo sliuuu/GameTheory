@@ -4,10 +4,12 @@ from datetime import datetime, timedelta
 import yfinance as yf
 import matplotlib.pyplot as plt
 import warnings
+import os
 warnings.filterwarnings("ignore")
 
 from gametheory import GeopoliticalMarketGame
 from data_cache import get_cache
+from utils.paths import get_output_dir
 
 class GeopoliticalMarketGameBacktester(GeopoliticalMarketGame):
     def __init__(self, use_cache=True):
@@ -216,8 +218,10 @@ class GeopoliticalMarketGameBacktester(GeopoliticalMarketGame):
         plt.legend()
         plt.ylabel("Accuracy")
         plt.tight_layout()
-        plt.savefig('backtest_accuracy.png', dpi=150, bbox_inches='tight')
-        print(f"\nPlot saved to: backtest_accuracy.png")
+        output_dir = get_output_dir()
+        output_file = output_dir / 'backtest_accuracy.png'
+        plt.savefig(output_file, dpi=150, bbox_inches='tight')
+        print(f"\nPlot saved to: {output_file}")
         plt.close()
 
     def sensitivity_analysis(self, noise_levels=None, n_runs=200):
@@ -327,7 +331,8 @@ class GeopoliticalMarketGameBacktester(GeopoliticalMarketGame):
         plt.tight_layout()
         
         # Save plot instead of showing (non-blocking)
-        filename = f'sensitivity_analysis_{self.current_date.strftime("%Y%m%d")}.png'
+        output_dir = get_output_dir()
+        filename = output_dir / f'sensitivity_analysis_{self.current_date.strftime("%Y%m%d")}.png'
         plt.savefig(filename, dpi=150, bbox_inches='tight')
         print(f"\nPlot saved to: {filename}")
         plt.close()

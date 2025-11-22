@@ -14,17 +14,20 @@ from pathlib import Path
 
 
 class MarketDataCache:
-    def __init__(self, cache_dir=".market_data_cache"):
+    def __init__(self, cache_dir=None):
         """
         Initialize the cache manager.
         
         Parameters:
         -----------
-        cache_dir : str
-            Directory to store cache files
+        cache_dir : str, optional
+            Directory to store cache files. If None, uses environment variable
+            CACHE_DIR or defaults to ".market_data_cache"
         """
+        if cache_dir is None:
+            cache_dir = os.getenv("CACHE_DIR", ".market_data_cache")
         self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(exist_ok=True)
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.cache_index_file = self.cache_dir / "cache_index.pkl"
         self.cache_index = self._load_index()
     
@@ -48,9 +51,7 @@ class MarketDataCache:
     
     def _get_cache_key(self, ticker, start_date, end_date):
         """Generate a cache key for a ticker and date range."""
-        start_str = start_date.strftime('%Y%m%d')
-        end_str = end_date.strftime('%Y%m%d')
-        key_str = f"{ticker}_{start_str}_{end_str}"
+        key_str = f"{ticker}_{start_date}_{end_date}"
         return hashlib.md5(key_str.encode()).hexdigest()
     
     def _get_cache_file(self, cache_key):
@@ -59,21 +60,27 @@ class MarketDataCache:
     
     def get(self, ticker, start_date, end_date):
         """
-        Get data from cache if available.
+        Get cached data for a ticker and date range.
         
         Parameters:
         -----------
         ticker : str
             Stock ticker symbol
-        start_date : datetime
+        start_date : datetime or str
             Start date
-        end_date : datetime
+        end_date : datetime or str
             End date
         
         Returns:
         --------
-        DataFrame or None if not in cache
+        pd.DataFrame or None
+            Cached data if available, None otherwise
         """
+        if isinstance(start_date, str):
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        if isinstance(end_date, str):
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        
         cache_key = self._get_cache_key(ticker, start_date, end_date)
         
         if cache_key in self.cache_index:
@@ -82,18 +89,15 @@ class MarketDataCache:
                 try:
                     with open(cache_file, 'rb') as f:
                         data = pickle.load(f)
-                    # Verify the data covers the requested range
+                    # Verify the data matches the requested range
                     if data is not None and not data.empty:
-                        data_start = data.index.min().to_pydatetime() if hasattr(data.index.min(), 'to_pydatetime') else data.index.min()
-                        data_end = data.index.max().to_pydatetime() if hasattr(data.index.max(), 'to_pydatetime') else data.index.max()
-                        
-                        # Check if cached data covers the requested range (with some tolerance)
-                        if data_start <= start_date + timedelta(days=2) and data_end >= end_date - timedelta(days=2):
+                        data_start = data.index.min()
+                        data_end = data.index.max()
+                        if data_start <= start_date and data_end >= end_date:
                             return data
                 except Exception as e:
-                    # If cache file is corrupted, remove it from index
-                    if cache_file.exists():
-                        cache_file.unlink()
+                    print(f"Warning: Could not load cache file {cache_file}: {e}")
+                    # Remove from index if file is corrupted
                     del self.cache_index[cache_key]
                     self._save_index()
         
@@ -101,21 +105,26 @@ class MarketDataCache:
     
     def put(self, ticker, start_date, end_date, data):
         """
-        Store data in cache.
+        Cache data for a ticker and date range.
         
         Parameters:
         -----------
         ticker : str
             Stock ticker symbol
-        start_date : datetime
+        start_date : datetime or str
             Start date
-        end_date : datetime
+        end_date : datetime or str
             End date
-        data : DataFrame
+        data : pd.DataFrame
             Data to cache
         """
         if data is None or data.empty:
             return
+        
+        if isinstance(start_date, str):
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        if isinstance(end_date, str):
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
         
         cache_key = self._get_cache_key(ticker, start_date, end_date)
         cache_file = self._get_cache_file(cache_key)
@@ -129,24 +138,24 @@ class MarketDataCache:
                 'ticker': ticker,
                 'start_date': start_date,
                 'end_date': end_date,
-                'cached_date': datetime.now(),
-                'rows': len(data)
+                'cached_at': datetime.now(),
+                'file_size': cache_file.stat().st_size
             }
             self._save_index()
         except Exception as e:
-            print(f"Warning: Could not cache data for {ticker}: {e}")
+            print(f"Warning: Could not save cache file {cache_file}: {e}")
     
     def clear(self, older_than_days=None):
         """
-        Clear cache, optionally only entries older than specified days.
+        Clear cache entries.
         
         Parameters:
         -----------
         older_than_days : int, optional
-            Only clear entries older than this many days. If None, clear all.
+            If provided, only clear entries older than this many days
         """
         if older_than_days is None:
-            # Clear everything
+            # Clear all
             for cache_key in list(self.cache_index.keys()):
                 cache_file = self._get_cache_file(cache_key)
                 if cache_file.exists():
@@ -158,40 +167,42 @@ class MarketDataCache:
             cutoff_date = datetime.now() - timedelta(days=older_than_days)
             to_remove = []
             for cache_key, metadata in self.cache_index.items():
-                if metadata['cached_date'] < cutoff_date:
+                if metadata.get('cached_at', datetime.now()) < cutoff_date:
                     cache_file = self._get_cache_file(cache_key)
                     if cache_file.exists():
                         cache_file.unlink()
                     to_remove.append(cache_key)
             
-            for key in to_remove:
-                del self.cache_index[key]
-            self._save_index()
+            for cache_key in to_remove:
+                del self.cache_index[cache_key]
+            
+            if to_remove:
+                self._save_index()
     
     def get_stats(self):
         """Get cache statistics."""
-        total_files = len(self.cache_index)
-        total_size = sum(
-            self._get_cache_file(key).stat().st_size 
-            for key in self.cache_index 
-            if self._get_cache_file(key).exists()
-        )
+        total_size = 0
+        total_entries = len(self.cache_index)
+        
+        for cache_key in self.cache_index:
+            cache_file = self._get_cache_file(cache_key)
+            if cache_file.exists():
+                total_size += cache_file.stat().st_size
+        
         return {
-            'total_entries': total_files,
+            'total_entries': total_entries,
+            'total_size_bytes': total_size,
             'total_size_mb': total_size / (1024 * 1024),
             'cache_dir': str(self.cache_dir)
         }
 
 
 # Global cache instance
-_global_cache = None
+_cache_instance = None
 
-def get_cache():
+def get_cache(cache_dir=None):
     """Get or create the global cache instance."""
-    global _global_cache
-    if _global_cache is None:
-        _global_cache = MarketDataCache()
-    return _global_cache
-
-
-
+    global _cache_instance
+    if _cache_instance is None:
+        _cache_instance = MarketDataCache(cache_dir)
+    return _cache_instance

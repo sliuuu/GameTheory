@@ -23,7 +23,17 @@ restart: ## Restart services
 
 clean: ## Stop services and remove volumes
 	docker-compose down -v
+	rm -rf .market_data_cache data/
+
+clean-cache: ## Clear only cache (keep logs, outputs, state)
+	docker-compose down
 	rm -rf .market_data_cache
+
+init-volumes: ## Initialize persistent volume directories
+	bash scripts/init_volumes.sh
+
+backup: ## Backup all persistent data
+	tar -czf backup-$(shell date +%Y%m%d-%H%M%S).tar.gz data/ .market_data_cache/ 2>/dev/null || echo "No data to backup"
 
 dev: ## Start development environment
 	docker-compose -f docker-compose.dev.yml up
